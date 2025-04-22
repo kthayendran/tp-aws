@@ -1,0 +1,48 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client
+
+      - name: SSH and deploy
+        run: |
+          ssh $SSH_USER@$SSH_HOST << 'EOF'
+            # Pour Debian, tu pourrais avoir besoin de mettre à jour et installer ces paquets
+            sudo apt-get update
+            sudo apt-get install -y git npm
+          
+            # Se rendre dans le répertoire de l'app et récupérer les dernières modifications
+            cd $WORK_DIR
+            git pull origin $MAIN_BRANCH
+          
+            # Installer les dépendances et effectuer le build
+            npm install
+            npm run build
+          
+            # Optionnel : démarrer ton app (ex. pm2)
+          EOF
+
+      - name: Clean up SSH key
+        run: |
+          rm -rf ~/.ssh
