@@ -43,7 +43,7 @@ jobs:
             npm install
             npm run build
           
-            # Optionnel : démarrer ton app (ex. pm2)
+            # Optionnel : démarrer ton app (ex. pm2) 
           EOF
 
       - name: Clean up SSH key
